@@ -12,6 +12,8 @@
 
 int manage_bt, mode_bt;
 
+int cnt_l = 0, cnt_r = 0, cnt_sw = 0, cnt_st = 0;
+
 int manage_val, mode_val, relay_val;
 bool left_flg = true, right_flg = true;
 
@@ -24,7 +26,7 @@ GStepper<STEPPER2WIRE> stepper(8, STEP, DIR, EN);               // драйве�
 void setup() {
 //  Timer0.setPeriod(1000);
 //  Timer0.enableISR();
-  //analogReference(INTERNAL);
+  analogReference(INTERNAL);
   Serial.begin(9600);  
   stepper.setRunMode(KEEP_SPEED);
   stepper.setCurrent(0);
@@ -42,25 +44,59 @@ void loop() {
 stepper.tick();
 manage_val = analogRead(MANAGE_BT);
 pos = stepper.getCurrent();
-if ((manage_val > 770) && (manage_val < 800)){ 
-  manage_bt = 3; //едем вправо
-  left_flg = true;
+if ((manage_val > 760) && (manage_val < 810)){
+  cnt_l = 0;
+  cnt_sw = 0;
+  cnt_st = 0;
+  cnt_r ++;
+  if (cnt_r >= 5){
+    cnt_r = 0; 
+    manage_bt = 3; //едем вправо
+    left_flg = true;
+  }
 }
-if ((manage_val > 920) && (manage_val < 940)){ 
-  manage_bt = 2; //едем влево
-  right_flg = true;
+else if ((manage_val > 910) && (manage_val < 950)){
+  cnt_r = 0;
+  cnt_sw = 0;
+  cnt_st = 0;
+  cnt_l ++;
+  if (cnt_l >= 5){
+    cnt_l = 0; 
+    manage_bt = 2; //едем влево
+    right_flg = true;
+  }
 }
 
-  if ((manage_val > 670) && (manage_val < 690)) {
+  else if ((manage_val > 660) && (manage_val < 700)) {
+   cnt_r = 0;
+   cnt_sw = 0;
+   cnt_l = 0;
+   cnt_st ++;
+   if (cnt_st >= 5){
+    cnt_st = 0; 
     manage_bt = 0; //кнопка стоп
     left_flg = true;
     right_flg = true;
   }
-  if ((manage_val > 570) && (manage_val < 600)) {
+}
+  else if ((manage_val > 560) && (manage_val < 610)) {
+   cnt_r = 0;
+   cnt_st = 0;
+   cnt_l = 0;
+   cnt_sw ++;
+   if (cnt_sw >= 5){
+    cnt_sw = 0; 
     manage_bt = 1; //концевик
     left_flg = true;
     right_flg = true;
   }
+}
+else {
+   cnt_r = 0;
+   cnt_st = 0;
+   cnt_l = 0;
+   cnt_sw = 0;
+}
 
   if ((manage_bt == 0) || (manage_bt == 1)){
     stepper.setSpeed(0);
@@ -79,5 +115,5 @@ if ((manage_bt == 3) && (right_flg)){
         stepper.setSpeed(leftPace);
         //Serial.println("left");
       }
-//Serial.println(pos);
+//Serial.println(cnt_l);
 }
