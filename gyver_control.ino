@@ -20,12 +20,15 @@ bool left_flg = true, right_flg = true;
 long dist = 10;
 long pos = 0;
 long targetPos;
-int leftPace = -2000;
-int rightPace = 2000;
+int pace = 2000;
+//int rightPace = 2000;
 GStepper<STEPPER2WIRE> stepper(8, STEP, DIR, EN);               // драйвер step-dir + пин enable
 void setup() {
-//  Timer0.setPeriod(1000);
-//  Timer0.enableISR();
+  Timer2.setPeriod(25);
+  Timer2.enableISR(CHANNEL_A);
+  Timer1.setPeriod(100);
+  Timer1.enableISR(CHANNEL_B);
+  
   analogReference(INTERNAL);
   Serial.begin(9600);  
   stepper.setRunMode(KEEP_SPEED);
@@ -36,12 +39,16 @@ void setup() {
   pinMode(13, OUTPUT);
 }
 //
-//ISR(TIMER0_B) {
-//  stepper.tick(); // тикаем тут
-//}
+ISR(TIMER2_A){
+  
+}
+
+ISR(TIMER1_B) {
+  stepper.tick(); // тикаем тут
+}
 
 void loop() {
-stepper.tick();
+//stepper.tick();
 manage_val = analogRead(MANAGE_BT);
 pos = stepper.getCurrent();
 if ((manage_val > 760) && (manage_val < 810)){
@@ -79,7 +86,7 @@ else if ((manage_val > 910) && (manage_val < 950)){
     right_flg = true;
   }
 }
-  else if ((manage_val > 560) && (manage_val < 610)) {
+  else if ((manage_val > 540) && (manage_val < 620)) {
    cnt_r = 0;
    cnt_st = 0;
    cnt_l = 0;
@@ -99,21 +106,25 @@ else {
 }
 
   if ((manage_bt == 0) || (manage_bt == 1)){
-    stepper.setSpeed(0);
+    //stepper.setSpeed(0);
+    stepper.disable();
+    stepper.brake();
     digitalWrite(13, LOW);
   }
 
 if ((manage_bt == 2) && (left_flg)){
+        stepper.enable();
         digitalWrite(13, HIGH);
         left_flg = false;
-        stepper.setSpeed(rightPace);
+        stepper.setSpeed(pace);
         //Serial.println("right");
    }
 if ((manage_bt == 3) && (right_flg)){
+        stepper.enable();
         digitalWrite(13, HIGH);
         right_flg  = false;
-        stepper.setSpeed(leftPace);
+        stepper.setSpeed(-1*pace);
         //Serial.println("left");
       }
-//Serial.println(cnt_l);
+Serial.println(pos);
 }
